@@ -10,64 +10,50 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Optional;
+import com.tmk.inventorymanager.employeeapi.employeeapi.service.EmployeeService;
 
 @RestController
 @RequestMapping("/api/employees")
 public class EmployeeController {
 
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
-    public EmployeeController(EmployeeRepository employeeRepository) {
-        this.employeeRepository = employeeRepository;
+    public EmployeeController(EmployeeService employeeService) {
+        this.employeeService = employeeService;
     }
 
     @GetMapping
     public List<Employee> getAllEmployees() {
-        return employeeRepository.findAll();
+        return employeeService.getAllEmployees();
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Employee> getEmployeeById(@PathVariable Long id) {
-        Optional<Employee> employee = employeeRepository.findById(id);
+        Optional<Employee> employee = employeeService.getEmployeeById(id);
         return employee.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<?> createEmployee(@Valid @RequestBody Employee employee) {
-        if (employeeRepository.existsByEmail(employee.getEmail())) {
-            return ResponseEntity.status(409).body("Email already exists");
-        }
-        Employee saved = employeeRepository.save(employee);
+        Employee saved = employeeService.createEmployee(employee);
         return ResponseEntity.ok(saved);
     }
 
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee employeeDetails) {
-        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
-        if (optionalEmployee.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        Employee employee = optionalEmployee.get();
-        // Only check for email uniqueness if the email is being changed
-        if (!employee.getEmail().equals(employeeDetails.getEmail()) && employeeRepository.existsByEmail(employeeDetails.getEmail())) {
-            return ResponseEntity.status(409).body("Email already exists");
-        }
-        employee.setFirstName(employeeDetails.getFirstName());
-        employee.setLastName(employeeDetails.getLastName());
-        employee.setEmail(employeeDetails.getEmail());
-        employee.setDepartment(employeeDetails.getDepartment());
-        Employee updatedEmployee = employeeRepository.save(employee);
-        return ResponseEntity.ok(updatedEmployee);
+        Optional<Employee> updated = employeeService.updateEmployee(id, employeeDetails);
+        return updated.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
-        if (!employeeRepository.existsById(id)) {
+        boolean deleted = employeeService.deleteEmployee(id);
+        if (!deleted) {
             return ResponseEntity.notFound().build();
         }
-        employeeRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 }
