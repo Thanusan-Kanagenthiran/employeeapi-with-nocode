@@ -56,8 +56,14 @@ class EmployeeControllerTest {
     void testCreateEmployee() {
         Employee emp = new Employee("John", "Doe", "john@email.com", "IT");
         when(employeeRepository.save(emp)).thenReturn(emp);
-        Employee result = employeeController.createEmployee(emp);
-        assertEquals("John", result.getFirstName());
+        ResponseEntity<?> response = employeeController.createEmployee(emp);
+        assertEquals(ResponseEntity.ok().build().getStatusCode(), response.getStatusCode());
+        assertNotNull(response.getBody());
+        if (response.getBody() instanceof Employee employee) {
+            assertEquals("John", employee.getFirstName());
+        } else {
+            fail("Response body is not an Employee");
+        }
     }
 
     @Test
@@ -66,13 +72,13 @@ class EmployeeControllerTest {
         Employee updated = new Employee("Jane", "Smith", "jane@email.com", "HR");
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(emp));
         when(employeeRepository.save(any(Employee.class))).thenReturn(updated);
-        ResponseEntity<Employee> response = employeeController.updateEmployee(1L, updated);
+        ResponseEntity<?> response = employeeController.updateEmployee(1L, updated);
         assertEquals(ResponseEntity.ok().build().getStatusCode(), response.getStatusCode());
         assertNotNull(response.getBody());
-        if (response.getBody() != null) {
-            assertEquals("Jane", response.getBody().getFirstName());
+        if (response.getBody() instanceof Employee employee) {
+            assertEquals("Jane", employee.getFirstName());
         } else {
-            fail("Response body is null");
+            fail("Response body is not an Employee");
         }
     }
 
@@ -80,7 +86,7 @@ class EmployeeControllerTest {
     void testUpdateEmployee_NotFound() {
         Employee updated = new Employee("Jane", "Smith", "jane@email.com", "HR");
         when(employeeRepository.findById(1L)).thenReturn(Optional.empty());
-        ResponseEntity<Employee> response = employeeController.updateEmployee(1L, updated);
+        ResponseEntity<?> response = employeeController.updateEmployee(1L, updated);
         assertEquals(ResponseEntity.notFound().build().getStatusCode(), response.getStatusCode());
     }
 

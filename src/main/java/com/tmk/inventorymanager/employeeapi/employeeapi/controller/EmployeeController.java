@@ -4,6 +4,9 @@ import com.tmk.inventorymanager.employeeapi.employeeapi.model.Employee;
 import com.tmk.inventorymanager.employeeapi.employeeapi.repository.EmployeeRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+// Removed unused imports after moving exception handling to global handler
+import jakarta.validation.Valid;
+// Removed unused imports after moving exception handling to global handler
 
 import java.util.List;
 import java.util.Optional;
@@ -31,12 +34,14 @@ public class EmployeeController {
     }
 
     @PostMapping
-    public Employee createEmployee(@RequestBody Employee employee) {
-        return employeeRepository.save(employee);
+    public ResponseEntity<?> createEmployee(@Valid @RequestBody Employee employee) {
+        Employee saved = employeeRepository.save(employee);
+        return ResponseEntity.ok(saved);
     }
 
+
     @PutMapping("/{id}")
-    public ResponseEntity<Employee> updateEmployee(@PathVariable Long id, @RequestBody Employee employeeDetails) {
+    public ResponseEntity<?> updateEmployee(@PathVariable Long id, @Valid @RequestBody Employee employeeDetails) {
         Optional<Employee> optionalEmployee = employeeRepository.findById(id);
         if (optionalEmployee.isEmpty()) {
             return ResponseEntity.notFound().build();
