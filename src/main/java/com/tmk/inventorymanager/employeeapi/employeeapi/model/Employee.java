@@ -23,6 +23,7 @@ public class Employee {
 
     @NotBlank(message = "Email is required")
     @Email(message = "Email should be valid")
+    @jakarta.persistence.Column(unique = true)
     private String email;
 
     @NotBlank(message = "Department is required")

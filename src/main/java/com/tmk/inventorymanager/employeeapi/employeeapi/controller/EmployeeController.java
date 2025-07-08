@@ -35,6 +35,9 @@ public class EmployeeController {
 
     @PostMapping
     public ResponseEntity<?> createEmployee(@Valid @RequestBody Employee employee) {
+        if (employeeRepository.existsByEmail(employee.getEmail())) {
+            return ResponseEntity.status(409).body("Email already exists");
+        }
         Employee saved = employeeRepository.save(employee);
         return ResponseEntity.ok(saved);
     }
@@ -47,6 +50,10 @@ public class EmployeeController {
             return ResponseEntity.notFound().build();
         }
         Employee employee = optionalEmployee.get();
+        // Only check for email uniqueness if the email is being changed
+        if (!employee.getEmail().equals(employeeDetails.getEmail()) && employeeRepository.existsByEmail(employeeDetails.getEmail())) {
+            return ResponseEntity.status(409).body("Email already exists");
+        }
         employee.setFirstName(employeeDetails.getFirstName());
         employee.setLastName(employeeDetails.getLastName());
         employee.setEmail(employeeDetails.getEmail());
